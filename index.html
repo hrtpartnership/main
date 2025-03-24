@@ -1,13 +1,103 @@
-1
-2
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя Telegram Mini App</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Добро пожаловать!</h1>
+            <p>Это пример Telegram Mini App с отдельным файлом стилей</p>
+        </header>
 
+        <main class="main-content">
+            <div class="card">
+                <h2>Основные функции</h2>
+                <button id="mainBtn">Нажми меня</button>
+                <button id="closeBtn">Закрыть приложение</button>
+            </div>
 
+            <div class="card">
+                <h3>Информация о пользователе</h3>
+                <div id="userData">Загрузка данных...</div>
+            </div>
 
+            <div class="card">
+                <h3>Отправить данные боту</h3>
+                <input type="text" id="messageInput" placeholder="Введите сообщение">
+                <button id="sendBtn">Отправить</button>
+            </div>
+        </main>
 
+        <footer class="footer">
+            <p id="statusText">Статус: готов к работе</p>
+        </footer>
+    </div>
 
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        
+        // Разворачиваем приложение на весь экран
+        tg.expand();
+        
+        // Показываем основную кнопку
+        tg.MainButton.setText("Подтвердить");
+        tg.MainButton.show();
+        tg.MainButton.onClick(() => {
+            tg.sendData(JSON.stringify({action: "confirm"}));
+        });
 
+        // Получаем данные пользователя
+        function showUserData() {
+            const user = tg.initDataUnsafe.user;
+            const userDataElement = document.getElementById('userData');
+            
+            if (user) {
+                userDataElement.innerHTML = `
+                    <p>ID: ${user.id}</p>
+                    <p>Имя: ${user.first_name || 'Не указано'}</p>
+                    ${user.last_name ? `<p>Фамилия: ${user.last_name}</p>` : ''}
+                    ${user.username ? `<p>@${user.username}</p>` : ''}
+                `;
+            } else {
+                userDataElement.textContent = "Данные пользователя недоступны";
+            }
+        }
 
+        // Обработчики кнопок
+        document.getElementById('mainBtn').addEventListener('click', () => {
+            document.getElementById('statusText').textContent = "Статус: кнопка нажата!";
+        });
 
+        document.getElementById('closeBtn').addEventListener('click', () => {
+            tg.close();
+        });
 
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            const message = document.getElementById('messageInput').value;
+            if (message) {
+                tg.sendData(JSON.stringify({message: message}));
+                document.getElementById('statusText').textContent = "Статус: сообщение отправлено!";
+            }
+        });
 
-13
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            showUserData();
+            
+            // Поддержка смены темы
+            tg.onEvent('themeChanged', () => {
+                document.body.className = tg.colorScheme;
+            });
+            
+            // Устанавливаем текущую тему
+            document.body.className = tg.colorScheme;
+        });
+    </script>
+</body>
+</html>
