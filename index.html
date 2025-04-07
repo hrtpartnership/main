@@ -17,61 +17,62 @@
             </div>
             
             <div class="payment-details">
-                <div class="price">Сумма: 15 BYN</div>
+                <div class="price">15 BYN</div>
                 <button id="payButton">Оплатить сейчас</button>
+                <div id="statusText"></div>
             </div>
         </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('user_id');
+        const tg = window.Telegram.WebApp
+        const userId = new URLSearchParams(window.location.search).get('user_id')
 
         // Инициализация
-        tg.expand();
-        tg.MainButton.hide();
+        tg.expand()
+        tg.MainButton.hide()
 
         // Загрузка данных пользователя
         function loadUserData() {
-            const user = tg.initDataUnsafe.user;
+            const user = tg.initDataUnsafe?.user
+            const country = tg.initDataUnsafe?.user?.language_code?.toUpperCase() || 'Не определена'
             
             if (user) {
-                document.getElementById('userName').textContent = `Имя: ${user.first_name || 'Неизвестно'}`;
-                
-                // Примерное определение страны (через initData)
-                const country = tg.initDataUnsafe.user?.language_code?.toUpperCase() || 'Не определена';
-                document.getElementById('userCountry').textContent = `Страна: ${country}`;
-                
-                return {
-                    name: user.first_name,
-                    country: country
-                };
+                document.getElementById('userName').textContent = `Имя: ${user.first_name || 'Гость'}`
+                document.getElementById('userCountry').textContent = `Страна: ${country}`
+                return { name: user.first_name, country }
             }
-            return {};
+            return { name: 'Гость', country }
         }
 
         // Обработчик оплаты
         document.getElementById('payButton').addEventListener('click', () => {
-            const userData = loadUserData();
-            
-            tg.sendData(JSON.stringify({
-                status: "success",
-                name: userData.name,
-                country: userData.country
-            }));
-            
-            tg.close();
-        });
+            const payButton = document.getElementById('payButton')
+            payButton.disabled = true
+            payButton.textContent = 'Обработка...'
+            payButton.classList.add('processing')
 
-        // Инициализация при загрузке
+            const userData = loadUserData()
+            document.getElementById('statusText').textContent = "⌛ Ожидайте..."
+
+            // Симуляция оплаты (3 секунды)
+            setTimeout(() => {
+                tg.sendData(JSON.stringify({
+                    status: "success",
+                    name: userData.name,
+                    country: userData.country
+                }))
+                document.getElementById('statusText').textContent = "✅ Успешно!"
+                tg.close()
+            }, 3000)
+        })
+
+        // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
-            if (!userId) {
-                tg.showAlert("Ошибка: пользователь не идентифицирован");
-                tg.close();
-            }
-            loadUserData();
-        });
+            if (!userId) tg.showAlert("Ошибка авторизации")
+            loadUserData()
+            document.body.className = tg.colorScheme
+        })
     </script>
 </body>
 </html>
